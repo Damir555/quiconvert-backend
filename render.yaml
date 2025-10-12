@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: quiconvert-backend
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
