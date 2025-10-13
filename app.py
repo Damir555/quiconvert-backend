@@ -6,7 +6,9 @@ import tempfile, os, io
 app = Flask(__name__)
 
 # ✅ Omogući CORS samo za tvoju WordPress domenu
-CORS(app, resources={r"/api/*": {"origins": "https://www.quiconvert.com"}})
+
+CORS(app, resources={r"/api/*": {"origins": ["https://www.quiconvert.com", "https://quiconvert.com"]}},
+     supports_credentials=True)
 
 @app.route('/api/pdf/merge', methods=['POST'])
 def merge_pdfs():
@@ -37,6 +39,7 @@ def merge_pdfs():
 if __name__ == '__main__':
     # ⚙️ Pokreće Flask na svim mrežnim sučeljima (nužno za Render)
     app.run(host='0.0.0.0', port=5000)
+
 
 
 
