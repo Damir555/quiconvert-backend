@@ -91,10 +91,60 @@ def merge_pdfs():
         return jsonify({"error": str(e)}), 500
 
 
-# ✅ Placeholder ruta za SPLIT (implementirat ćemo uskoro)
+from PyPDF2 import PdfReader, PdfWriter
+import zipfile, io
+
 @app.route("/api/pdf/split", methods=["POST"])
 def split_pdf():
-    return jsonify({"message": "Split function coming soon"}), 200
+    try:
+        file = request.files.get("files")
+        if not file:
+            return jsonify({"error": "No PDF uploaded"}), 400
+
+        split_pages = request.form.get("split_pages", "").strip()
+        reader = PdfReader(file)
+        output_buffer = io.BytesIO()
+
+        # Ako nije unesen split_pages -> split every page
+        if not split_pages:
+            # Kreiraj ZIP s jednom stranicom po PDF-u
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, "w") as zipf:
+                for i, page in enumerate(reader.pages, start=1):
+                    writer = PdfWriter()
+                    writer.add_page(page)
+                    temp_pdf = io.BytesIO()
+                    writer.write(temp_pdf)
+                    temp_pdf.seek(0)
+                    zipf.writestr(f"page_{i}.pdf", temp_pdf.read())
+            zip_buffer.seek(0)
+            return send_file(zip_buffer, mimetype="application/zip",
+                             as_attachment=True, download_name="split_pages.zip")
+
+        # Ako je unesen split_pages -> obradi raspon(e)
+        pages_to_extract = []
+        for part in split_pages.split(","):
+            part = part.strip()
+            if "-" in part:
+                start, end = part.split("-")
+                pages_to_extract.extend(range(int(start), int(end) + 1))
+            elif part.isdigit():
+                pages_to_extract.append(int(part))
+
+        writer = PdfWriter()
+        for p in pages_to_extract:
+            if 1 <= p <= len(reader.pages):
+                writer.add_page(reader.pages[p - 1])
+
+        writer.write(output_buffer)
+        output_buffer.seek(0)
+
+        return send_file(output_buffer, mimetype="application/pdf",
+                         as_attachment=True, download_name="split_selected.pdf")
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 @app.route("/")
@@ -104,3 +154,4 @@ def home():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
