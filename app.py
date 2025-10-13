@@ -121,26 +121,7 @@ def split_pdf():
             return send_file(zip_buffer, mimetype="application/zip",
                              as_attachment=True, download_name="split_pages.zip")
 
-        # Ako je unesen split_pages -> obradi raspon(e)
-       # pages_to_extract = []
-        #for part in split_pages.split(","):
-         #   part = part.strip()
-         #   if "-" in part:
-          #      start, end = part.split("-")
-          #      pages_to_extract.extend(range(int(start), int(end) + 1))
-          #  elif part.isdigit():
-           ##     pages_to_extract.append(int(part))
-
-     #   writer = PdfWriter()
-    #    for p in pages_to_extract:
-     #       if 1 <= p <= len(reader.pages):
-     #           writer.add_page(reader.pages[p - 1])
-
-    #    writer.write(output_buffer)
-    #    output_buffer.seek(0)
-
-     #   return send_file(output_buffer, mimetype="application/pdf",
-                         as_attachment=True, download_name="split_selected.pdf")
+     
 
         # Ako je unesen split_pages -> obradi raspon(e)
         pages_to_extract = []
@@ -183,5 +164,6 @@ def home():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
