@@ -19,7 +19,8 @@ DAILY_LIMIT_FREE = 5
 USAGE_LOG = {}
 VALID_API_KEYS = {"demo123", "test456", "admin789"}
 UPLOAD_FIELD = "files"
-
+MAX_UPLOAD_MB = 5
+MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 def error_response(message, status=500):
     return jsonify({"success": False, "error": message}), status
