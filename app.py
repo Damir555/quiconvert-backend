@@ -23,6 +23,15 @@ MAX_UPLOAD_MB = 5
 MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 def error_response(message, status=500):
+    def validate_file_size(file):
+    file.seek(0, io.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+
+    if size > MAX_UPLOAD_BYTES:
+        return False, size
+
+    return True, size
     return jsonify({"success": False, "error": message}), status
 
 
@@ -187,9 +196,17 @@ def compress_pdf():
         print("[Compress] Started")
 
         file = request.files.get(UPLOAD_FIELD)
+        
 
         if not file:
             return error_response("No PDF uploaded", 400)
+            is_valid_size, file_size = validate_file_size(file)
+
+if not is_valid_size:
+    return error_response(
+        f"File is too large. Free limit is {MAX_UPLOAD_MB} MB.",
+        413
+    )
 
         pdf = fitz.open(stream=file.read(), filetype="pdf")
 
