@@ -180,13 +180,43 @@ def split_pdf():
         return error_response(str(e), 500)
 
 
-# DOC-003 — Compress PDF placeholder
 @app.route("/api/pdf/compress", methods=["POST"])
 def compress_pdf():
-    return jsonify({
-        "success": False,
-        "message": "Compress PDF is not implemented yet."
-    }), 501
+    try:
+        print("[Compress] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        pdf = fitz.open(stream=file.read(), filetype="pdf")
+
+        output = io.BytesIO()
+
+        pdf.save(
+            output,
+            garbage=4,
+            deflate=True,
+            clean=True
+        )
+
+        pdf.close()
+
+        output.seek(0)
+
+        print("[Compress] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="compressed.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Compress] Failed: {e}")
+        return error_response(str(e), 500)
 
 
 if __name__ == "__main__":
