@@ -24,15 +24,15 @@ MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 def error_response(message, status=500):
     def validate_file_size(file):
-    file.seek(0, io.SEEK_END)
-    size = file.tell()
-    file.seek(0)
+        file.seek(0, io.SEEK_END)
+        size = file.tell()
+        file.seek(0)
 
-    if size > MAX_UPLOAD_BYTES:
+        if size > MAX_UPLOAD_BYTES:
         return False, size
 
-    return True, size
-    return jsonify({"success": False, "error": message}), status
+        return True, size
+        return jsonify({"success": False, "error": message}), status
 
 
 def is_valid_api_key(key):
