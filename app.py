@@ -1,3 +1,4 @@
+import fitz
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from PyPDF2 import PdfMerger, PdfReader, PdfWriter
