@@ -6,7 +6,9 @@ from services.pdf_service import (
     split_pdf_file,
     compress_pdf_file,
     rotate_pdf_file,
+    rearrange_pdf_file,
 )
+
 from utils.responses import error_response
 from utils.validation import validate_file_size, file_too_large_message
 
@@ -124,4 +126,32 @@ def rotate_pdf():
     except Exception as e:
         print(f"[Rotate] Failed: {e}")
         return error_response(str(e), 500)
+    
+@pdf_routes.route("/api/pdf/rearrange", methods=["POST"])
+def rearrange_pdf():
+    try:
+        print("[Rearrange] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        page_order = request.form.get("page_order", "").strip()
+
+        output = rearrange_pdf_file(file, page_order)
+
+        print("[Rearrange] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="rearranged.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Rearrange] Failed: {e}")
+        return error_response(str(e), 500)
+    
     

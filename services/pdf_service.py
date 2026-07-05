@@ -104,3 +104,36 @@ def rotate_pdf_file(file, rotation):
 
     return output
 
+
+def rearrange_pdf_file(file, page_order):
+    reader = PdfReader(file)
+    writer = PdfWriter()
+
+    pages = []
+
+    for part in page_order.split(","):
+        part = part.strip()
+
+        if not part.isdigit():
+            raise ValueError("Page order must contain only page numbers separated by commas.")
+
+        page_number = int(part)
+
+        if page_number < 1 or page_number > len(reader.pages):
+            raise ValueError("Page number out of range.")
+
+        pages.append(page_number)
+
+    if not pages:
+        raise ValueError("Page order is required.")
+
+    for page_number in pages:
+        writer.add_page(reader.pages[page_number - 1])
+
+    output = io.BytesIO()
+    writer.write(output)
+    writer.close()
+    output.seek(0)
+
+    return output
+
