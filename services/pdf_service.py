@@ -137,3 +137,38 @@ def rearrange_pdf_file(file, page_order):
 
     return output
 
+
+def delete_pages_from_pdf(file, pages_to_delete):
+    reader = PdfReader(file)
+    writer = PdfWriter()
+
+    pages = []
+
+    for part in pages_to_delete.split(","):
+        part = part.strip()
+
+        if not part.isdigit():
+            raise ValueError("Pages to delete must contain only page numbers separated by commas.")
+
+        page_number = int(part)
+
+        if page_number < 1 or page_number > len(reader.pages):
+            raise ValueError("Page number out of range.")
+
+        pages.append(page_number)
+
+    if not pages:
+        raise ValueError("Pages to delete are required.")
+
+    pages_to_delete_set = set(pages)
+
+    for index, page in enumerate(reader.pages, start=1):
+        if index not in pages_to_delete_set:
+            writer.add_page(page)
+
+    output = io.BytesIO()
+    writer.write(output)
+    writer.close()
+    output.seek(0)
+
+    return output

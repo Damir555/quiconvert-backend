@@ -7,6 +7,7 @@ from services.pdf_service import (
     compress_pdf_file,
     rotate_pdf_file,
     rearrange_pdf_file,
+    delete_pages_from_pdf,
 )
 
 from utils.responses import error_response
@@ -154,4 +155,30 @@ def rearrange_pdf():
         print(f"[Rearrange] Failed: {e}")
         return error_response(str(e), 500)
     
+@pdf_routes.route("/api/pdf/delete-pages", methods=["POST"])
+def delete_pages():
+    try:
+        print("[Delete Pages] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        pages_to_delete = request.form.get("pages", "").strip()
+
+        output = delete_pages_from_pdf(file, pages_to_delete)
+
+        print("[Delete Pages] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="deleted_pages.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Delete Pages] Failed: {e}")
+        return error_response(str(e), 500)
     
