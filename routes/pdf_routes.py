@@ -1,7 +1,12 @@
 from flask import Blueprint, request, send_file
 
 from config import UPLOAD_FIELD
-from services.pdf_service import merge_pdf_files, split_pdf_file, compress_pdf_file
+from services.pdf_service import (
+    merge_pdf_files,
+    split_pdf_file,
+    compress_pdf_file,
+    rotate_pdf_file,
+)
 from utils.responses import error_response
 from utils.validation import validate_file_size, file_too_large_message
 
@@ -91,3 +96,32 @@ def compress_pdf():
     except Exception as e:
         print(f"[Compress] Failed: {e}")
         return error_response(str(e), 500)
+    
+
+@pdf_routes.route("/api/pdf/rotate", methods=["POST"])
+def rotate_pdf():
+    try:
+        print("[Rotate] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        rotation = request.form.get("rotation", "90")
+
+        output = rotate_pdf_file(file, rotation)
+
+        print("[Rotate] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="rotated.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Rotate] Failed: {e}")
+        return error_response(str(e), 500)
+    

@@ -80,4 +80,27 @@ def compress_pdf_file(file):
     pdf.close()
     output.seek(0)
 
+
     return output
+
+
+def rotate_pdf_file(file, rotation):
+    rotation = int(rotation)
+
+    if rotation not in [90, 180, 270]:
+        raise ValueError("Rotation must be 90, 180, or 270 degrees.")
+
+    reader = PdfReader(file)
+    writer = PdfWriter()
+
+    for page in reader.pages:
+        page.rotate(rotation)
+        writer.add_page(page)
+
+    output = io.BytesIO()
+    writer.write(output)
+    writer.close()
+    output.seek(0)
+
+    return output
+
