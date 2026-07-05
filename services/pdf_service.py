@@ -172,3 +172,43 @@ def delete_pages_from_pdf(file, pages_to_delete):
     output.seek(0)
 
     return output
+
+
+def duplicate_pages_in_pdf(file, pages_to_duplicate):
+    reader = PdfReader(file)
+    writer = PdfWriter()
+
+    pages = []
+
+    for part in pages_to_duplicate.split(","):
+        part = part.strip()
+
+        if not part.isdigit():
+            raise ValueError(
+                "Pages to duplicate must contain only page numbers separated by commas."
+            )
+
+        page_number = int(part)
+
+        if page_number < 1 or page_number > len(reader.pages):
+            raise ValueError("Page number out of range.")
+
+        pages.append(page_number)
+
+    if not pages:
+        raise ValueError("Pages to duplicate are required.")
+
+    pages_to_duplicate_set = set(pages)
+
+    for index, page in enumerate(reader.pages, start=1):
+        writer.add_page(page)
+
+        if index in pages_to_duplicate_set:
+            writer.add_page(page)
+
+    output = io.BytesIO()
+    writer.write(output)
+    writer.close()
+    output.seek(0)
+
+    return output

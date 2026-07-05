@@ -8,6 +8,7 @@ from services.pdf_service import (
     rotate_pdf_file,
     rearrange_pdf_file,
     delete_pages_from_pdf,
+    duplicate_pages_in_pdf,
 )
 
 from utils.responses import error_response
@@ -181,4 +182,30 @@ def delete_pages():
     except Exception as e:
         print(f"[Delete Pages] Failed: {e}")
         return error_response(str(e), 500)
-    
+
+@pdf_routes.route("/api/pdf/duplicate-pages", methods=["POST"])
+def duplicate_pages():
+    try:
+        print("[Duplicate Pages] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        pages_to_duplicate = request.form.get("pages", "").strip()
+
+        output = duplicate_pages_in_pdf(file, pages_to_duplicate)
+
+        print("[Duplicate Pages] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="duplicated_pages.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Duplicate Pages] Failed: {e}")
+        return error_response(str(e), 500)
