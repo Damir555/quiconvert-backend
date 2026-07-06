@@ -11,6 +11,8 @@ from services.pdf_service import (
     duplicate_pages_in_pdf,
     reverse_pages_in_pdf,
     watermark_pdf_file,
+    protect_pdf_file,
+    unlock_pdf_file,
 )
 
 from utils.responses import error_response
@@ -269,4 +271,68 @@ def watermark_pdf():
 
     except Exception as e:
         print(f"[Watermark] Failed: {e}")
+        return error_response(str(e), 500)
+
+@pdf_routes.route("/api/pdf/protect", methods=["POST"])
+def protect_pdf():
+    try:
+        print("[Protect PDF] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        password = request.form.get("password", "").strip()
+
+        if not password:
+            return error_response("Password is required", 400)
+
+        if len(password) < 4:
+            return error_response("Password must contain at least 4 characters", 400)
+
+        output = protect_pdf_file(file, password)
+
+        print("[Protect PDF] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="protected.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Protect PDF] Failed: {e}")
+        return error_response(str(e), 500)
+
+
+@pdf_routes.route("/api/pdf/unlock", methods=["POST"])
+def unlock_pdf():
+    try:
+        print("[Unlock PDF] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        password = request.form.get("password", "").strip()
+
+        if not password:
+            return error_response("Password is required", 400)
+
+        output = unlock_pdf_file(file, password)
+
+        print("[Unlock PDF] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="unlocked.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Unlock PDF] Failed: {e}")
         return error_response(str(e), 500)

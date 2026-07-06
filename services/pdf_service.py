@@ -283,3 +283,42 @@ def watermark_pdf_file(file, text, color="gray", opacity=0.25, size="large"):
     output.seek(0)
 
     return output
+
+
+def protect_pdf_file(file, password):
+    reader = PdfReader(file)
+    writer = PdfWriter()
+
+    for page in reader.pages:
+        writer.add_page(page)
+
+    writer.encrypt(password)
+
+    output = io.BytesIO()
+    writer.write(output)
+    writer.close()
+    output.seek(0)
+
+    return output
+
+
+def unlock_pdf_file(file, password):
+    reader = PdfReader(file)
+
+    if not reader.is_encrypted:
+        raise ValueError("PDF is not password protected.")
+
+    if reader.decrypt(password) == 0:
+        raise ValueError("Incorrect password.")
+
+    writer = PdfWriter()
+
+    for page in reader.pages:
+        writer.add_page(page)
+
+    output = io.BytesIO()
+    writer.write(output)
+    writer.close()
+    output.seek(0)
+
+    return output
