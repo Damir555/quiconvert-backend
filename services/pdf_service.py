@@ -368,3 +368,18 @@ def add_page_numbers_to_pdf(file):
     output.seek(0)
 
     return output
+
+
+def image_to_pdf_file(file):
+    image_bytes = file.read()
+
+    image_doc = fitz.open(stream=image_bytes, filetype="jpeg")
+
+    pdf_bytes = image_doc.convert_to_pdf()
+
+    image_doc.close()
+
+    output = io.BytesIO(pdf_bytes)
+    output.seek(0)
+
+    return output

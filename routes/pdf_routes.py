@@ -14,6 +14,7 @@ from services.pdf_service import (
     protect_pdf_file,
     unlock_pdf_file,
     add_page_numbers_to_pdf,
+    image_to_pdf_file,
 )
 
 from utils.responses import error_response
@@ -362,4 +363,30 @@ def add_page_numbers():
 
     except Exception as e:
         print(f"[Page Numbers] Failed: {e}")
+        return error_response(str(e), 500)
+
+
+@pdf_routes.route("/api/pdf/image-to-pdf", methods=["POST"])
+def image_to_pdf():
+    try:
+        print("[Image to PDF] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No image uploaded", 400)
+
+        output = image_to_pdf_file(file)
+
+        print("[Image to PDF] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="image.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Image to PDF] Failed: {e}")
         return error_response(str(e), 500)
