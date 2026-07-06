@@ -10,6 +10,7 @@ from services.pdf_service import (
     delete_pages_from_pdf,
     duplicate_pages_in_pdf,
     reverse_pages_in_pdf,
+    watermark_pdf_file,
 )
 
 from utils.responses import error_response
@@ -234,4 +235,38 @@ def reverse_pages():
 
     except Exception as e:
         print(f"[Reverse Pages] Failed: {e}")
+        return error_response(str(e), 500)
+
+@pdf_routes.route("/api/pdf/watermark", methods=["POST"])
+def watermark_pdf():
+    try:
+        print("[Watermark] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        text = request.form.get("text", "").strip()
+
+        if not text:
+            return error_response("Watermark text is required", 400)
+
+        color = request.form.get("color", "gray").strip().lower()
+        size = request.form.get("size", "large").strip().lower()
+        opacity = float(request.form.get("opacity", "0.25"))
+
+        output = watermark_pdf_file(file, text, color, opacity, size)
+
+        print("[Watermark] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="watermarked.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Watermark] Failed: {e}")
         return error_response(str(e), 500)
