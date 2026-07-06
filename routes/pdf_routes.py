@@ -9,6 +9,7 @@ from services.pdf_service import (
     rearrange_pdf_file,
     delete_pages_from_pdf,
     duplicate_pages_in_pdf,
+    reverse_pages_in_pdf,
 )
 
 from utils.responses import error_response
@@ -208,4 +209,29 @@ def duplicate_pages():
 
     except Exception as e:
         print(f"[Duplicate Pages] Failed: {e}")
+        return error_response(str(e), 500)
+
+@pdf_routes.route("/api/pdf/reverse-pages", methods=["POST"])
+def reverse_pages():
+    try:
+        print("[Reverse Pages] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        output = reverse_pages_in_pdf(file)
+
+        print("[Reverse Pages] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="reversed_pages.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Reverse Pages] Failed: {e}")
         return error_response(str(e), 500)

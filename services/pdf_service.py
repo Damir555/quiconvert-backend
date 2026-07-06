@@ -212,3 +212,18 @@ def duplicate_pages_in_pdf(file, pages_to_duplicate):
     output.seek(0)
 
     return output
+
+
+def reverse_pages_in_pdf(file):
+    reader = PdfReader(file)
+    writer = PdfWriter()
+
+    for page_number in range(len(reader.pages), 0, -1):
+        writer.add_page(reader.pages[page_number - 1])
+
+    output = io.BytesIO()
+    writer.write(output)
+    writer.close()
+    output.seek(0)
+
+    return output
