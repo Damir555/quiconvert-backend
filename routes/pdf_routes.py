@@ -19,6 +19,8 @@ from services.pdf_service import (
 
 from utils.responses import error_response
 from utils.validation import validate_file_size, file_too_large_message
+from utils import messages
+from utils import filenames
 
 pdf_routes = Blueprint("pdf_routes", __name__)
 
@@ -41,7 +43,7 @@ def merge_pdfs():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="merged.pdf"
+            download_name=filenames.MERGED
         )
 
     except Exception as e:
@@ -100,7 +102,7 @@ def compress_pdf():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="compressed.pdf"
+            download_name=filenames.COMPRESSED
         )
 
     except Exception as e:
@@ -128,7 +130,7 @@ def rotate_pdf():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="rotated.pdf"
+            download_name=filenames.ROTATED
         )
 
     except Exception as e:
@@ -155,7 +157,7 @@ def rearrange_pdf():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="rearranged.pdf"
+            download_name=filenames.REARRANGED
         )
 
     except Exception as e:
@@ -182,7 +184,7 @@ def delete_pages():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="deleted_pages.pdf"
+            download_name=filenames.DELETED
         )
 
     except Exception as e:
@@ -209,7 +211,7 @@ def duplicate_pages():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="duplicated_pages.pdf"
+            download_name=filenames.DUPLICATED
         )
 
     except Exception as e:
@@ -234,7 +236,7 @@ def reverse_pages():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="reversed_pages.pdf"
+            download_name=filenames.REVERSED
         )
 
     except Exception as e:
@@ -268,7 +270,7 @@ def watermark_pdf():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="watermarked.pdf"
+            download_name=filenames.WATERMARKED
         )
 
     except Exception as e:
@@ -283,15 +285,15 @@ def protect_pdf():
         file = request.files.get(UPLOAD_FIELD)
 
         if not file:
-            return error_response("No PDF uploaded", 400)
+            return error_response(messages.NO_PDF_UPLOADED, 400)
 
         password = request.form.get("password", "").strip()
 
         if not password:
-            return error_response("Password is required", 400)
+            return error_response(messages.PASSWORD_REQUIRED, 400)
 
         if len(password) < 4:
-            return error_response("Password must contain at least 4 characters", 400)
+            return error_response(messages.PASSWORD_TOO_SHORT, 400)
 
         output = protect_pdf_file(file, password)
 
@@ -301,7 +303,7 @@ def protect_pdf():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="protected.pdf"
+            download_name=filenames.PROTECTED
         )
 
     except Exception as e:
@@ -317,12 +319,12 @@ def unlock_pdf():
         file = request.files.get(UPLOAD_FIELD)
 
         if not file:
-            return error_response("No PDF uploaded", 400)
+            return error_response(messages.NO_PDF_UPLOADED, 400)
 
         password = request.form.get("password", "").strip()
 
         if not password:
-            return error_response("Password is required", 400)
+            return error_response(messages.PASSWORD_REQUIRED, 400)
 
         output = unlock_pdf_file(file, password)
 
@@ -332,7 +334,7 @@ def unlock_pdf():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="unlocked.pdf"
+            download_name=filenames.UNLOCKED
         )
 
     except Exception as e:
@@ -358,7 +360,7 @@ def add_page_numbers():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="page_numbers.pdf"
+            download_name=filenames.PAGE_NUMBERS
         )
 
     except Exception as e:
@@ -384,7 +386,7 @@ def image_to_pdf():
             output,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="image.pdf"
+            download_name=filenames.IMAGE_TO_PDF
         )
 
     except Exception as e:
