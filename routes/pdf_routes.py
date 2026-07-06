@@ -13,6 +13,7 @@ from services.pdf_service import (
     watermark_pdf_file,
     protect_pdf_file,
     unlock_pdf_file,
+    add_page_numbers_to_pdf,
 )
 
 from utils.responses import error_response
@@ -335,4 +336,30 @@ def unlock_pdf():
 
     except Exception as e:
         print(f"[Unlock PDF] Failed: {e}")
+        return error_response(str(e), 500)
+
+
+@pdf_routes.route("/api/pdf/page-numbers", methods=["POST"])
+def add_page_numbers():
+    try:
+        print("[Page Numbers] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        output = add_page_numbers_to_pdf(file)
+
+        print("[Page Numbers] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="page_numbers.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Page Numbers] Failed: {e}")
         return error_response(str(e), 500)

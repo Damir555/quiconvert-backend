@@ -322,3 +322,49 @@ def unlock_pdf_file(file, password):
     output.seek(0)
 
     return output
+
+
+def create_page_number_overlay(page_number, page_width, page_height):
+    packet = io.BytesIO()
+
+    c = canvas.Canvas(packet, pagesize=(page_width, page_height))
+
+    c.setFont("Helvetica", 10)
+    c.setFillColor(Color(0.3, 0.3, 0.3))
+
+    x = page_width / 2
+    y = 20
+
+    c.drawCentredString(x, y, str(page_number))
+
+    c.save()
+    packet.seek(0)
+
+    return PdfReader(packet)
+
+
+def add_page_numbers_to_pdf(file):
+    reader = PdfReader(file)
+    writer = PdfWriter()
+
+    for index, page in enumerate(reader.pages, start=1):
+        page_width = float(page.mediabox.width)
+        page_height = float(page.mediabox.height)
+
+        overlay_reader = create_page_number_overlay(
+            index,
+            page_width,
+            page_height
+        )
+
+        overlay_page = overlay_reader.pages[0]
+
+        page.merge_page(overlay_page)
+        writer.add_page(page)
+
+    output = io.BytesIO()
+    writer.write(output)
+    writer.close()
+    output.seek(0)
+
+    return output
