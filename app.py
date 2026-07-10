@@ -9,8 +9,21 @@ app = Flask(__name__)
 
 CORS(
     app,
-    resources={r"/api/*": {"origins": CORS_ORIGINS}},
-    supports_credentials=True
+    resources={
+        r"/api/*": {
+            "origins": CORS_ORIGINS,
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": [
+                "Content-Type",
+                "X-Api-Key",
+                "X-Session-Id"
+            ],
+            "expose_headers": [
+                "Content-Disposition"
+            ]
+        }
+    },
+    supports_credentials=False
 )
 
 app.before_request(enforce_api_key_and_limit)
