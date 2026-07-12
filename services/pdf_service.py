@@ -7,6 +7,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.colors import Color
 from reportlab.lib.units import inch
 
+from services.font_service import register_unicode_font
 
 
 def merge_pdf_files(files):
@@ -249,7 +250,8 @@ def create_text_watermark(text, color="gray", opacity=0.25, size="large"):
 
     watermark_color = colors.get(color, colors["gray"])
 
-    c.setFont("Helvetica-Bold", font_size)
+    font_name = register_unicode_font()
+    c.setFont(font_name, font_size)
     c.setFillColor(watermark_color)
 
     c.saveState()
