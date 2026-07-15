@@ -432,7 +432,9 @@ def pdf_to_images_file(file):
 
     if pdf_document.page_count == 0:
         pdf_document.close()
-        raise ValueError("The PDF contains no pages.")
+        raise ValueError(
+            "The PDF contains no pages."
+        )
 
     zip_buffer = io.BytesIO()
 
@@ -440,22 +442,43 @@ def pdf_to_images_file(file):
         with zipfile.ZipFile(
             zip_buffer,
             "w",
-            compression=zipfile.ZIP_DEFLATED
+            compression=zipfile.ZIP_STORED
         ) as zip_file:
-            for page_index in range(pdf_document.page_count):
-                page = pdf_document.load_page(page_index)
+            for page_index in range(
+                pdf_document.page_count
+            ):
+                print(
+                    "[PDF to Images] "
+                    f"Rendering page "
+                    f"{page_index + 1}/"
+                    f"{pdf_document.page_count}"
+                )
+
+                page = pdf_document.load_page(
+                    page_index
+                )
 
                 pixmap = page.get_pixmap(
-                    matrix=fitz.Matrix(2, 2),
+                    matrix=fitz.Matrix(1, 1),
                     alpha=False
                 )
 
-                image_bytes = pixmap.tobytes("png")
+                image_bytes = pixmap.tobytes(
+                    "png"
+                )
 
                 zip_file.writestr(
-                    f"page_{page_index + 1}.png",
+                    (
+                        f"page_"
+                        f"{page_index + 1}.png"
+                    ),
                     image_bytes
                 )
+
+                del image_bytes
+                del pixmap
+                del page
+
     finally:
         pdf_document.close()
 
