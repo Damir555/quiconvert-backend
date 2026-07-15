@@ -218,6 +218,42 @@ def duplicate_pages_in_pdf(file, pages_to_duplicate):
 
     return output
 
+def extract_pages_from_pdf(file, pages_to_extract):
+    reader = PdfReader(file)
+    writer = PdfWriter()
+
+    pages = []
+
+    for part in pages_to_extract.split(","):
+        part = part.strip()
+
+        if not part.isdigit():
+            raise ValueError(
+                "Pages to extract must contain only page numbers separated by commas."
+            )
+
+        page_number = int(part)
+
+        if page_number < 1 or page_number > len(reader.pages):
+            raise ValueError("Page number out of range.")
+
+        pages.append(page_number)
+
+    if not pages:
+        raise ValueError("Pages to extract are required.")
+
+    for page_number in pages:
+        writer.add_page(reader.pages[page_number - 1])
+
+    output = io.BytesIO()
+
+    writer.write(output)
+    writer.close()
+
+    output.seek(0)
+
+    return output
+
 
 def reverse_pages_in_pdf(file):
     reader = PdfReader(file)
@@ -385,3 +421,44 @@ def image_to_pdf_file(file):
     output.seek(0)
 
     return output
+
+def pdf_to_images_file(file):
+    pdf_bytes = file.read()
+
+    pdf_document = fitz.open(
+        stream=pdf_bytes,
+        filetype="pdf"
+    )
+
+    if pdf_document.page_count == 0:
+        pdf_document.close()
+        raise ValueError("The PDF contains no pages.")
+
+    zip_buffer = io.BytesIO()
+
+    try:
+        with zipfile.ZipFile(
+            zip_buffer,
+            "w",
+            compression=zipfile.ZIP_DEFLATED
+        ) as zip_file:
+            for page_index in range(pdf_document.page_count):
+                page = pdf_document.load_page(page_index)
+
+                pixmap = page.get_pixmap(
+                    matrix=fitz.Matrix(2, 2),
+                    alpha=False
+                )
+
+                image_bytes = pixmap.tobytes("png")
+
+                zip_file.writestr(
+                    f"page_{page_index + 1}.png",
+                    image_bytes
+                )
+    finally:
+        pdf_document.close()
+
+    zip_buffer.seek(0)
+
+    return zip_buffer
