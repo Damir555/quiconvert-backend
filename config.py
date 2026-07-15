@@ -1,3 +1,4 @@
+import os
 CORS_ORIGINS = [
     "https://www.quiconvert.com",
     "https://quiconvert.com",
@@ -13,6 +14,15 @@ VALID_API_KEYS = {
     "demo123",
     "test456",
     "admin789"
+}
+
+DEV_UNLIMITED_SESSION_IDS = {
+    session_id.strip()
+    for session_id in os.getenv(
+        "DEV_UNLIMITED_SESSION_IDS",
+        ""
+    ).split(",")
+    if session_id.strip()
 }
 
 UPLOAD_FIELD = "files"

@@ -9,12 +9,14 @@ from services.pdf_service import (
     rearrange_pdf_file,
     delete_pages_from_pdf,
     duplicate_pages_in_pdf,
+    extract_pages_from_pdf,
     reverse_pages_in_pdf,
     watermark_pdf_file,
     protect_pdf_file,
     unlock_pdf_file,
     add_page_numbers_to_pdf,
     image_to_pdf_file,
+    pdf_to_images_file,
 )
 
 from utils.responses import error_response
@@ -215,6 +217,40 @@ def duplicate_pages():
     except Exception as e:
         print(f"[Duplicate Pages] Failed: {e}")
         return error_response(str(e), 500)
+    
+@pdf_routes.route("/api/pdf/extract-pages", methods=["POST", "OPTIONS"])
+def extract_pages():
+    if request.method == "OPTIONS":
+        return "", 204
+    
+    try:
+        print("[Extract Pages] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        pages_to_extract = request.form.get("pages", "").strip()
+
+        output = extract_pages_from_pdf(
+            file,
+            pages_to_extract
+        )
+
+        print("[Extract Pages] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="extracted_pages.pdf"
+        )
+
+    except Exception as e:
+        print(f"[Extract Pages] Failed: {e}")
+        return error_response(str(e), 500)
+
 
 @pdf_routes.route("/api/pdf/reverse-pages", methods=["POST"])
 def reverse_pages():
@@ -390,3 +426,32 @@ def image_to_pdf():
     except Exception as e:
         print(f"[Image to PDF] Failed: {e}")
         return error_response(str(e), 500)
+    
+@pdf_routes.route("/api/pdf/pdf-to-images", methods=["POST"])
+def pdf_to_images():
+    try:
+        print("[PDF to Images] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response(
+                "No PDF uploaded",
+                400
+            )
+
+        output = pdf_to_images_file(file)
+
+        print("[PDF to Images] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/zip",
+            as_attachment=True,
+            download_name="pdf_pages.zip"
+        )
+
+    except Exception as e:
+        print(f"[PDF to Images] Failed: {e}")
+        return error_response(str(e), 500)
+
