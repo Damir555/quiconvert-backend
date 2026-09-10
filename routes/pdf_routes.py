@@ -5,6 +5,7 @@ from services.pdf_service import (
     merge_pdf_files,
     split_pdf_file,
     compress_pdf_file,
+    flatten_pdf_file,
     rotate_pdf_file,
     rearrange_pdf_file,
     delete_pages_from_pdf,
@@ -107,6 +108,40 @@ def compress_pdf():
 
     except Exception as e:
         print(f"[Compress] Failed: {e}")
+        return error_response(str(e), 500)
+
+
+@pdf_routes.route("/api/pdf/flatten", methods=["POST"])
+def flatten_pdf():
+    try:
+        print("[Flatten PDF] Started")
+
+        file = request.files.get(UPLOAD_FIELD)
+
+        if not file:
+            return error_response("No PDF uploaded", 400)
+
+        is_valid_size, _ = validate_file_size(file)
+
+        if not is_valid_size:
+            return error_response(file_too_large_message(), 413)
+
+        output = flatten_pdf_file(file)
+
+        print("[Flatten PDF] Completed")
+
+        return send_file(
+            output,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="flattened.pdf"
+        )
+
+    except ValueError as e:
+        print(f"[Flatten PDF] Rejected: {e}")
+        return error_response(str(e), 400)
+    except Exception as e:
+        print(f"[Flatten PDF] Failed: {e}")
         return error_response(str(e), 500)
     
 
@@ -454,4 +489,3 @@ def pdf_to_images():
     except Exception as e:
         print(f"[PDF to Images] Failed: {e}")
         return error_response(str(e), 500)
-

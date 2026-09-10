@@ -89,6 +89,38 @@ def compress_pdf_file(file):
     return output
 
 
+def flatten_pdf_file(file):
+    pdf_bytes = file.read()
+
+    if not pdf_bytes:
+        raise ValueError("The uploaded PDF is empty.")
+
+    pdf = fitz.open(stream=pdf_bytes, filetype="pdf")
+
+    try:
+        if pdf.needs_pass:
+            raise ValueError("Password-protected PDFs must be unlocked before flattening.")
+
+        if pdf.page_count == 0:
+            raise ValueError("The PDF contains no pages.")
+
+        pdf.bake(annots=True, widgets=True)
+
+        output = io.BytesIO()
+        pdf.save(
+            output,
+            garbage=4,
+            deflate=True,
+            clean=True,
+            use_objstms=1,
+        )
+        output.seek(0)
+
+        return output
+    finally:
+        pdf.close()
+
+
 def rotate_pdf_file(file, rotation):
     rotation = int(rotation)
 
