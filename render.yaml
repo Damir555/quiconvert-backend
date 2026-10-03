@@ -5,3 +5,10 @@ services:
     plan: free
     buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn app:app"
+    envVars:
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
+      - key: DAILY_LIMIT_FREE
+        value: "5"
+      - key: USAGE_TIMEZONE
+        value: "Europe/Zagreb"
