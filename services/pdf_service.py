@@ -2,7 +2,7 @@ import io
 import zipfile
 import fitz
 
-from PyPDF2 import PdfMerger, PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import Color
 from reportlab.lib.units import inch
@@ -11,14 +11,14 @@ from services.font_service import register_unicode_font
 
 
 def merge_pdf_files(files):
-    merger = PdfMerger()
+    writer = PdfWriter()
 
     for file in files:
-        merger.append(file)
+        writer.append(file)
 
     output = io.BytesIO()
-    merger.write(output)
-    merger.close()
+    writer.write(output)
+    writer.close()
     output.seek(0)
 
     return output

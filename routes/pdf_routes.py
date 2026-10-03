@@ -49,7 +49,7 @@ def merge_pdfs():
 
     except Exception as e:
         print(f"[Merge] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 
 @pdf_routes.route("/api/pdf/split", methods=["POST"])
@@ -77,7 +77,7 @@ def split_pdf():
 
     except Exception as e:
         print(f"[Split] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 
 @pdf_routes.route("/api/pdf/compress", methods=["POST"])
@@ -108,7 +108,7 @@ def compress_pdf():
 
     except Exception as e:
         print(f"[Compress] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 
 @pdf_routes.route("/api/pdf/flatten", methods=["POST"])
@@ -142,7 +142,7 @@ def flatten_pdf():
         return error_response(str(e), 400)
     except Exception as e:
         print(f"[Flatten PDF] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
     
 
 @pdf_routes.route("/api/pdf/rotate", methods=["POST"])
@@ -170,7 +170,7 @@ def rotate_pdf():
 
     except Exception as e:
         print(f"[Rotate] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
     
 @pdf_routes.route("/api/pdf/rearrange", methods=["POST"])
 def rearrange_pdf():
@@ -197,7 +197,7 @@ def rearrange_pdf():
 
     except Exception as e:
         print(f"[Rearrange] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
     
 @pdf_routes.route("/api/pdf/delete-pages", methods=["POST"])
 def delete_pages():
@@ -224,7 +224,7 @@ def delete_pages():
 
     except Exception as e:
         print(f"[Delete Pages] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 @pdf_routes.route("/api/pdf/duplicate-pages", methods=["POST"])
 def duplicate_pages():
@@ -251,7 +251,7 @@ def duplicate_pages():
 
     except Exception as e:
         print(f"[Duplicate Pages] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
     
 @pdf_routes.route("/api/pdf/extract-pages", methods=["POST", "OPTIONS"])
 def extract_pages():
@@ -284,7 +284,7 @@ def extract_pages():
 
     except Exception as e:
         print(f"[Extract Pages] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 
 @pdf_routes.route("/api/pdf/reverse-pages", methods=["POST"])
@@ -310,7 +310,7 @@ def reverse_pages():
 
     except Exception as e:
         print(f"[Reverse Pages] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 @pdf_routes.route("/api/pdf/watermark", methods=["POST"])
 def watermark_pdf():
@@ -344,7 +344,7 @@ def watermark_pdf():
 
     except Exception as e:
         print(f"[Watermark] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 @pdf_routes.route("/api/pdf/protect", methods=["POST"])
 def protect_pdf():
@@ -377,7 +377,7 @@ def protect_pdf():
 
     except Exception as e:
         print(f"[Protect PDF] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 
 @pdf_routes.route("/api/pdf/unlock", methods=["POST"])
@@ -408,7 +408,7 @@ def unlock_pdf():
 
     except Exception as e:
         print(f"[Unlock PDF] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 
 @pdf_routes.route("/api/pdf/page-numbers", methods=["POST"])
@@ -434,7 +434,7 @@ def add_page_numbers():
 
     except Exception as e:
         print(f"[Page Numbers] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
 
 
 @pdf_routes.route("/api/pdf/image-to-pdf", methods=["POST"])
@@ -460,7 +460,7 @@ def image_to_pdf():
 
     except Exception as e:
         print(f"[Image to PDF] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
     
 @pdf_routes.route("/api/pdf/pdf-to-images", methods=["POST"])
 def pdf_to_images():
@@ -488,4 +488,4 @@ def pdf_to_images():
 
     except Exception as e:
         print(f"[PDF to Images] Failed: {e}")
-        return error_response(str(e), 500)
+        return error_response("Unable to process the document.", 500)
