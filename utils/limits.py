@@ -207,6 +207,14 @@ def set_usage_store_for_testing(store):
     USAGE_STORE = store
 
 
+def usage_store_is_ready():
+    try:
+        return bool(USAGE_STORE.ping())
+    except Exception:
+        current_app.logger.exception("Shared usage store readiness check failed")
+        return False
+
+
 def reset_usage_for_testing():
     reset = getattr(USAGE_STORE, "reset", None)
 

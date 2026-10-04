@@ -82,6 +82,9 @@ class MemoryUsageStore:
         with self._lock:
             self._buckets.clear()
 
+    def ping(self):
+        return True
+
     @staticmethod
     def _remove_expired(bucket, now):
         expired = [
@@ -230,6 +233,9 @@ return remaining
                 limit,
             )
         )
+
+    def ping(self):
+        return bool(self._redis.ping())
 
     def _keys(self, bucket_key):
         base = f"{self._prefix}:{bucket_key}"
