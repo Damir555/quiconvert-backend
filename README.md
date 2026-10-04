@@ -54,6 +54,25 @@ Render uses `/health` as its service health check. GitHub Actions runs the full
 unit and smoke-test suite for pull requests to `main` and for pushes to the
 main security and feature branches.
 
+## Dependency security
+
+GitHub Actions audits `requirements.txt` with `pip-audit` whenever dependency
+files change, on manual request, and every Monday. A discovered known
+vulnerability fails the security workflow instead of being silently ignored.
+
+Dependabot checks both Python packages and GitHub Actions every Monday. Its
+pull requests must pass the backend tests and dependency audit before they are
+merged. Review breaking or major updates manually; do not enable automatic
+merging without an additional review policy.
+
+To run the same audit locally in an isolated virtual environment:
+
+```powershell
+python -m venv .venv-audit
+& ".venv-audit\Scripts\python.exe" -m pip install -r requirements-dev.txt
+& ".venv-audit\Scripts\python.exe" -m pip_audit --requirement requirements.txt --progress-spinner off
+```
+
 ## Render deployment
 
 The included Blueprint creates a private Render Key Value instance and injects
