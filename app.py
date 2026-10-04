@@ -4,7 +4,11 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import CORS_ORIGINS, MAX_REQUEST_BYTES, TRUST_PROXY_HEADERS
 from routes.pdf_routes import pdf_routes
-from utils.limits import enforce_api_key_and_limit, finalize_usage_limit
+from utils.limits import (
+    enforce_api_key_and_limit,
+    finalize_usage_limit,
+    usage_store_is_ready,
+)
 from utils.responses import error_response
 from utils.validation import UploadValidationError, validate_request_uploads
 
@@ -85,6 +89,28 @@ def home():
     return jsonify({
         "success": True,
         "message": "QuiConvert API is running!"
+    })
+
+
+@app.route("/health")
+def health():
+    return jsonify({
+        "success": True,
+        "status": "healthy",
+    })
+
+
+@app.route("/ready")
+def ready():
+    if not usage_store_is_ready():
+        return jsonify({
+            "success": False,
+            "status": "not_ready",
+        }), 503
+
+    return jsonify({
+        "success": True,
+        "status": "ready",
     })
 
 

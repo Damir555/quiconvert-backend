@@ -43,6 +43,17 @@ service from starting without a shared store.
 
 Never commit real tokens, passwords, certificates, or `.env` files.
 
+## Health checks
+
+- `GET /health` confirms that the Flask process is running. It never consumes
+  a PDF operation and does not depend on the shared usage store.
+- `GET /ready` confirms that the configured usage store is reachable. It never
+  consumes a PDF operation and returns HTTP 503 when the store is unavailable.
+
+Render uses `/health` as its service health check. GitHub Actions runs the full
+unit and smoke-test suite for pull requests to `main` and for pushes to the
+main security and feature branches.
+
 ## Render deployment
 
 The included Blueprint creates a private Render Key Value instance and injects
