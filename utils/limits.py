@@ -1,24 +1,25 @@
 import hashlib
 import hmac
-import threading
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from flask import g, request
+from flask import current_app, g, request
 
 from config import (
     DAILY_LIMIT_FREE,
     DEV_UNLIMITED_SESSION_IDS,
     MONETIZATION_ACTIVE,
+    RATE_LIMIT_PREFIX,
+    RATE_LIMIT_RESERVATION_SECONDS,
+    REDIS_URL,
+    REQUIRE_SHARED_RATE_LIMIT,
     USAGE_TIMEZONE,
     VALID_API_KEYS,
 )
 from utils.responses import error_response
+from utils.usage_store import MemoryUsageStore, RedisUsageStore
 
-
-USAGE_LOG = {}
-USAGE_DAY = None
-USAGE_LOCK = threading.Lock()
 
 LOCAL_ADDRESSES = {
     "127.0.0.1",
@@ -26,11 +27,51 @@ LOCAL_ADDRESSES = {
 }
 
 
-def usage_date():
+def _usage_timezone():
     try:
-        return datetime.now(ZoneInfo(USAGE_TIMEZONE)).date()
+        return ZoneInfo(USAGE_TIMEZONE)
     except ZoneInfoNotFoundError:
-        return datetime.now(timezone.utc).date()
+        return timezone.utc
+
+
+def usage_date():
+    return datetime.now(_usage_timezone()).date()
+
+
+def _seconds_until_bucket_expiry():
+    now = datetime.now(_usage_timezone())
+    next_midnight = datetime.combine(
+        now.date() + timedelta(days=1),
+        datetime.min.time(),
+        tzinfo=now.tzinfo,
+    )
+    return max(int((next_midnight - now).total_seconds()) + 3600, 3600)
+
+
+def _build_usage_store():
+    if REDIS_URL:
+        from redis import Redis
+
+        return RedisUsageStore(
+            Redis.from_url(
+                REDIS_URL,
+                decode_responses=True,
+                socket_connect_timeout=2,
+                socket_timeout=2,
+                health_check_interval=30,
+            ),
+            RATE_LIMIT_PREFIX,
+        )
+
+    if REQUIRE_SHARED_RATE_LIMIT:
+        raise RuntimeError(
+            "REDIS_URL is required when REQUIRE_SHARED_RATE_LIMIT is enabled."
+        )
+
+    return MemoryUsageStore()
+
+
+USAGE_STORE = _build_usage_store()
 
 
 def is_valid_api_key(key):
@@ -64,33 +105,8 @@ def client_usage_key():
     return hashlib.sha256(address.encode("utf-8")).hexdigest()
 
 
-def _daily_bucket(key):
-    global USAGE_DAY
-
-    today = usage_date()
-
-    if USAGE_DAY != today:
-        USAGE_LOG.clear()
-        USAGE_DAY = today
-
-    return USAGE_LOG.setdefault(
-        key,
-        {
-            "completed": 0,
-            "pending": 0,
-        },
-    )
-
-
-def _remaining_uses(key):
-    with USAGE_LOCK:
-        bucket = _daily_bucket(key)
-        return max(
-            DAILY_LIMIT_FREE
-            - bucket["completed"]
-            - bucket["pending"],
-            0,
-        )
+def usage_bucket_key(client_key):
+    return f"{usage_date().isoformat()}:{client_key}"
 
 
 def enforce_api_key_and_limit():
@@ -110,54 +126,89 @@ def enforce_api_key_and_limit():
         if not is_valid_api_key(api_key):
             return error_response("Invalid or missing API key", 403)
 
-    key = client_usage_key()
-    g.usage_limit_key = key
+    client_key = client_usage_key()
+    bucket_key = usage_bucket_key(client_key)
+    reservation_id = uuid.uuid4().hex
+    g.usage_limit_bucket_key = bucket_key
 
-    with USAGE_LOCK:
-        bucket = _daily_bucket(key)
+    try:
+        decision = USAGE_STORE.reserve(
+            bucket_key,
+            reservation_id,
+            DAILY_LIMIT_FREE,
+            RATE_LIMIT_RESERVATION_SECONDS,
+            _seconds_until_bucket_expiry(),
+        )
+    except Exception:
+        current_app.logger.exception("Shared usage limiter unavailable")
+        return error_response(
+            "Usage limit service is temporarily unavailable.",
+            503,
+        )
 
-        if bucket["completed"] + bucket["pending"] >= DAILY_LIMIT_FREE:
-            response, status = error_response(
-                (
-                    "Daily limit reached "
-                    f"(Free tier: {DAILY_LIMIT_FREE} successful uses per day)"
-                ),
-                429,
-            )
-            response.headers["Retry-After"] = "86400"
-            return response, status
+    if not decision.allowed:
+        response, status = error_response(
+            (
+                "Daily limit reached "
+                f"(Free tier: {DAILY_LIMIT_FREE} successful uses per day)"
+            ),
+            429,
+        )
+        response.headers["Retry-After"] = str(
+            max(_seconds_until_bucket_expiry() - 3600, 1)
+        )
+        return response, status
 
-        # Reserve a slot so concurrent requests cannot exceed the limit.
-        bucket["pending"] += 1
-        g.usage_limit_reserved = True
-
+    g.usage_limit_reservation_id = reservation_id
+    g.usage_limit_reserved = True
     return None
 
 
 def finalize_usage_limit(response):
-    key = getattr(g, "usage_limit_key", None)
+    bucket_key = getattr(g, "usage_limit_bucket_key", None)
+    reservation_id = getattr(g, "usage_limit_reservation_id", None)
     reserved = getattr(g, "usage_limit_reserved", False)
 
-    if key and reserved:
-        with USAGE_LOCK:
-            bucket = _daily_bucket(key)
-            bucket["pending"] = max(bucket["pending"] - 1, 0)
+    if bucket_key and reserved and reservation_id:
+        try:
+            remaining = USAGE_STORE.finalize(
+                bucket_key,
+                reservation_id,
+                200 <= response.status_code < 300,
+                DAILY_LIMIT_FREE,
+                _seconds_until_bucket_expiry(),
+            )
+        except Exception:
+            current_app.logger.exception(
+                "Unable to finalize shared usage reservation"
+            )
+            remaining = 0
+    elif bucket_key:
+        try:
+            remaining = USAGE_STORE.remaining(
+                bucket_key,
+                DAILY_LIMIT_FREE,
+            )
+        except Exception:
+            current_app.logger.exception(
+                "Unable to read shared usage limit"
+            )
+            remaining = 0
+    else:
+        return response
 
-            if 200 <= response.status_code < 300:
-                bucket["completed"] += 1
-
-    if key:
-        response.headers["X-RateLimit-Limit"] = str(DAILY_LIMIT_FREE)
-        response.headers["X-RateLimit-Remaining"] = str(
-            _remaining_uses(key)
-        )
-
+    response.headers["X-RateLimit-Limit"] = str(DAILY_LIMIT_FREE)
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
     return response
 
 
-def reset_usage_for_testing():
-    global USAGE_DAY
+def set_usage_store_for_testing(store):
+    global USAGE_STORE
+    USAGE_STORE = store
 
-    with USAGE_LOCK:
-        USAGE_LOG.clear()
-        USAGE_DAY = None
+
+def reset_usage_for_testing():
+    reset = getattr(USAGE_STORE, "reset", None)
+
+    if reset:
+        reset()

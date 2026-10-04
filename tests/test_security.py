@@ -4,7 +4,11 @@ import unittest
 import fitz
 
 from app import app
-from utils.limits import reset_usage_for_testing
+from utils.limits import (
+    reset_usage_for_testing,
+    set_usage_store_for_testing,
+)
+from utils.usage_store import MemoryUsageStore
 
 
 TEST_IP = "203.0.113.10"
@@ -23,6 +27,7 @@ class SecurityTests(unittest.TestCase):
     def setUp(self):
         app.config["TESTING"] = True
         self.client = app.test_client()
+        set_usage_store_for_testing(MemoryUsageStore())
         reset_usage_for_testing()
 
     def post_rotate(self, ip=TEST_IP, session_id=None):

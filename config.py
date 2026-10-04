@@ -39,6 +39,16 @@ MONETIZATION_ACTIVE = env_flag("MONETIZATION_ACTIVE")
 
 DAILY_LIMIT_FREE = max(1, env_int("DAILY_LIMIT_FREE", 5))
 USAGE_TIMEZONE = os.getenv("USAGE_TIMEZONE", "Europe/Zagreb")
+REDIS_URL = os.getenv("REDIS_URL", "").strip()
+RATE_LIMIT_PREFIX = os.getenv(
+    "RATE_LIMIT_PREFIX",
+    "quiconvert:usage",
+).strip() or "quiconvert:usage"
+RATE_LIMIT_RESERVATION_SECONDS = max(
+    30,
+    env_int("RATE_LIMIT_RESERVATION_SECONDS", 900),
+)
+REQUIRE_SHARED_RATE_LIMIT = env_flag("REQUIRE_SHARED_RATE_LIMIT")
 
 VALID_API_KEYS = {
     key.strip()
